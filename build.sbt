@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
   "io.spray" % "spray-can" % "1.1.3",
   "org.scalatest" % "scalatest_2.11" % "2.2.6" % "test",
+  "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
   "org.slf4j" % "slf4j-log4j12" % "1.6.0",
   "org.apache.spark" %% "spark-core" % "1.6.1"
   //  "net.databinder" %% "dispatch-http" % "0.8.5",
