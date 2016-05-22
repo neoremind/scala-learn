@@ -100,6 +100,8 @@ object PMPOrderPriceCalc {
 
     logger.info("Results: " + results.size)
     logger.info("Success results: " + successResults.size)
+    logger.info("Normal results: " + successResults.filter(!_.isCpmLessThan100).size)
+    logger.info("CpmLessThan100 results: " + successResults.filter(_.isCpmLessThan100).size)
     logger.info("Fail results:" + failResults.size)
     logger.info("Audit results:" + auditResults.size)
 
