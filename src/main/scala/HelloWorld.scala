@@ -17,7 +17,7 @@ object HelloWorld {
     val width = 2147483648600L & 0xFFFFFFFFL
     val height = 2147483648600L >> 32
     println(width + "\t" + height)
-    println("600*500".getSizeBitMask)
+    println("300*250".getSizeBitMask)
   }
 
   implicit class get(s: String) {
