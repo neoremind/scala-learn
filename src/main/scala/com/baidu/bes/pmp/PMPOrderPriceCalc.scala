@@ -1,24 +1,9 @@
 package com.baidu.bes.pmp
 
-import java.io.{File, PrintWriter}
+import java.io.{FileWriter, File, PrintWriter}
 import java.util.Date
-
-import com.baidu.bes.pmp.PMPOrderPriceCalc.{CsvOutput, SysOutConsoleWriter}
 import org.slf4j.LoggerFactory
-
 import scala.io.Source
-
-/**
- * 程序主入口
- */
-object Main extends App {
-
-  val tuStatFilePath = "/Users/baidu/work/tu_stat_month"
-  val ordersFilePath = "/Users/baidu/work/orders"
-  val output = CsvOutput(SysOutConsoleWriter)
-  PMPOrderPriceCalc.execute(tuStatFilePath, ordersFilePath, output)
-
-}
 
 /**
  * PMP order price calculator
@@ -52,7 +37,7 @@ object PMPOrderPriceCalc {
       TuStat(domain, dspId, resType, sizeId, imp, clk, cost)
     }, (c: TuStat) => c.impression > 0 && c.impression > c.clk)
 
-    // 文件格式：40      BesPreOrder-1444466856-1035     gucheng.com     0
+    // 文件格式：pre_order_id    order_id        ssp_name        ssp_url creative_styles adsize  dsp_id  dsp_name
     val orders = FileReader.fromFile(ordersFile, (s: String) => {
       val fields = s.split("\t")
       val orderKeyIndex = fields(0).toLong
@@ -191,11 +176,13 @@ object PMPOrderPriceCalc {
     topTuStatList.last.cost = cachedTopTuLast._2
 
     // 返回计算结果
+    var premiumCpm = (top25TuStatCpm * premiumCoefficient).toLong
+    if (premiumCpm < 100) premiumCpm = 100
     CalcResult(order.orderId, order.domainName, order.domain, order.creativeStyles, order.sizeId,
-      (top25TuStatCpm * premiumCoefficient).toLong,
+      premiumCpm,
       originalTuStatCpm, byDspIdMaxCpmTuStat._2.cpm, byDspIdMaxCpmTuStat._1,
       DspIdDefine.getLiteral(byDspIdMaxCpmTuStat._1),
-      byDspIdMaxCpmTuStat._2.impression)
+      byDspIdMaxCpmTuStat._2.impression, isCpmLessThan100 = premiumCpm < 100)
   }
 
   def isNeedAudit(r: CalcResult): Boolean = {
@@ -251,6 +238,7 @@ object PMPOrderPriceCalc {
    * @param maxCpmDspId 主域+广告位尺寸下最大CPM的DSP渠道
    * @param maxCpmDspIdName 主域+广告位尺寸下最大CPM的DSP渠道名称
    * @param maxCpmDspImpression 主域+广告位尺寸下最大CPM的DSP渠道的展现
+   * @param isCpmLessThan100 是否CPM小于100，即1块钱
    * @param isFail 是否计算失败
    * @param msg 计算失败的原因
    */
@@ -265,11 +253,17 @@ object PMPOrderPriceCalc {
                         maxCpmDspId: Int,
                         maxCpmDspIdName: String,
                         maxCpmDspImpression: Long,
+                        var isCpmLessThan100: Boolean = false,
                         var isFail: Boolean = false,
                         var msg: String = "") {
 
     def isFail(isFail: Boolean): CalcResult = {
       this.isFail = isFail
+      this
+    }
+
+    def isCpmLessThan100(isCpmLessThan100: Boolean): CalcResult = {
+      this.isCpmLessThan100 = isCpmLessThan100
       this
     }
 
@@ -393,7 +387,6 @@ object PMPOrderPriceCalc {
 
   case class SqlOutput(writer: Writer) extends Output {
     def output(s: Seq[CalcResult], msgInfo: String) = {
-      logger.info(msgInfo)
       logger.info("Sql output begin...")
       val f = (c: CalcResult) => {
         if (!c.isFail && !isNeedAudit(c)) {
@@ -416,7 +409,6 @@ object PMPOrderPriceCalc {
 
   case class CsvOutput(writer: Writer) extends Output {
     def output(s: Seq[CalcResult], msgInfo: String) = {
-      logger.info(msgInfo)
       logger.info("Csv output begin...")
       val f = (c: CalcResult) => {
         if (c.isFail) {
@@ -426,27 +418,29 @@ object PMPOrderPriceCalc {
             c.maxCpmDspId, c.maxCpmDspIdName, c.maxCpmDspImpression).mkString("\t")
         }
       }
-      writer.write(s, f)
+      writer.write(s, f, msgInfo)
       logger.info("Csv output end")
     }
   }
 
   trait Writer {
-    def write[V](s: Seq[V], f: V => String)
+    def write[V](s: Seq[V], f: V => String, header: String = "")
   }
 
-  class FileWriter(filePath: String) extends Writer {
-    override def write[V](s: Seq[V], f: V => String) = {
-      val writer = new PrintWriter(new File(filePath))
+  case class LocalFileWriter(filePath: String) extends Writer {
+    override def write[V](s: Seq[V], f: V => String, header: String = "") = {
+      val writer = new FileWriter(new File(filePath), true)
+      writer.write(header)
       for (i <- s) {
-        writer.println(f(i))
+        writer.write(f(i) + "\n")
       }
       writer.close()
     }
   }
 
   object LoggerWriter extends Writer {
-    override def write[V](s: Seq[V], f: V => String) = {
+    override def write[V](s: Seq[V], f: V => String, header: String = "") = {
+      logger.info(header)
       for (i <- s) {
         logger.info(f(i))
       }
@@ -454,7 +448,8 @@ object PMPOrderPriceCalc {
   }
 
   object SysOutConsoleWriter extends Writer {
-    override def write[V](s: Seq[V], f: V => String) = {
+    override def write[V](s: Seq[V], f: V => String, header: String = "") = {
+      println(header)
       for (i <- s) {
         println(f(i))
       }
