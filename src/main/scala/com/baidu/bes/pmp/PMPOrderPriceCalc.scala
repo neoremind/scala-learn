@@ -1,8 +1,10 @@
 package com.baidu.bes.pmp
 
-import java.io.{FileWriter, File, PrintWriter}
+import java.io.{File, FileWriter}
 import java.util.Date
+
 import org.slf4j.LoggerFactory
+
 import scala.io.Source
 
 /**
@@ -25,7 +27,7 @@ object PMPOrderPriceCalc {
 
   def execute(tuStatFile: String, ordersFile: String, output: Output): (List[CalcResult], List[CalcResult], List[CalcResult]) = {
     // 文件格式：7       9223372032562353936     caoliu1.com     0       247     12      194     1       300*250
-    val tuStats = FileReader.fromFile(tuStatFile, (s: String) => {
+    val tuStats = FileReader(tuStatFile).fromFile((s: String) => {
       val fields = s.split("\t")
       val domain = fields(2)
       val dspId = fields(3).toInt
@@ -38,7 +40,7 @@ object PMPOrderPriceCalc {
     }, (c: TuStat) => c.impression > 0 && c.impression > c.clk)
 
     // 文件格式：pre_order_id    order_id        ssp_name        ssp_url creative_styles adsize  dsp_id  dsp_name
-    val orders = FileReader.fromFile(ordersFile, (s: String) => {
+    val orders = FileReader(ordersFile).fromFile((s: String) => {
       val fields = s.split("\t")
       val orderKeyIndex = fields(0).toLong
       val orderId = fields(1)
@@ -52,9 +54,9 @@ object PMPOrderPriceCalc {
     })
 
     val res = calcAllOrderPrice(tuStats, orders)
-    output.output(res._1, "Output success results")
-    output.output(res._2, "Output fail results")
-    output.output(res._3, "Output audit results")
+    output.output(res._1, "Output success results, num=" + res._1.size)
+    output.output(res._2, "Output fail results, num=" + res._2.size)
+    output.output(res._3, "Output audit results, num=" + res._3.size)
     res
   }
 
@@ -74,6 +76,8 @@ object PMPOrderPriceCalc {
     val domainSize2TuStatCache = tuStats.groupBy(DomainSizeKey)
 
     // 3）遍历所有PD订单，计算溢价后的CPM订单价格
+    logger.info("Start to calculate " + orders.size + " orders")
+    var num = 0;
     val results = orders.map(o => {
       try {
         calcOrderPrice(domain2TuStatCache, domainSize2TuStatCache, o)
@@ -83,6 +87,9 @@ object PMPOrderPriceCalc {
           logger.error(msg)
           newCalcResult(o.orderId, o.domainName, o.domain, o.creativeStyles, o.sizeId).isFail(true).msg(msg)
         }
+      } finally {
+        num = num + 1
+        logger.info("Finish " + num);
       }
     })
 
@@ -369,13 +376,13 @@ object PMPOrderPriceCalc {
     }
   }
 
-  object FileReader {
-    def fromFile[V](d: String, f: String => V, c: V => Boolean): List[V] = {
-      Source.fromFile(d, "UTF-8").getLines().map(f).filter(c).toList
+  case class FileReader(filePath: String) {
+    def fromFile[V](f: String => V, c: V => Boolean): List[V] = {
+      Source.fromFile(filePath, "UTF-8").getLines().map(f).filter(c).toList
     }
 
-    def fromFile[V](d: String, f: String => V): List[V] = {
-      fromFile(d, f, (v: V) => true)
+    def fromFile[V](f: String => V): List[V] = {
+      fromFile(f, (v: V) => true)
     }
   }
 
@@ -430,7 +437,9 @@ object PMPOrderPriceCalc {
   case class LocalFileWriter(filePath: String) extends Writer {
     override def write[V](s: Seq[V], f: V => String, header: String = "") = {
       val writer = new FileWriter(new File(filePath), true)
-      writer.write(header)
+      if (!"".equals(header)) {
+        writer.write(header + "\n")
+      }
       for (i <- s) {
         writer.write(f(i) + "\n")
       }
