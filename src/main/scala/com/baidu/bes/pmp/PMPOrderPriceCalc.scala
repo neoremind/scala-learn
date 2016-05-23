@@ -23,7 +23,7 @@ object PMPOrderPriceCalc {
   val premiumCoefficient = 1.5
 
   /** 单价异常的范围，指溢价后的单价和最大CPM单价渠道的比值 */
-  val auditThreshold = (3.0, 0.0)
+  val auditThreshold = (3.0, 1.0)
 
   def execute(tuStatFile: String, ordersFile: String, output: Output): (List[CalcResult], List[CalcResult], List[CalcResult]) = {
     // 文件格式：7       9223372032562353936     caoliu1.com     0       247     12      194     1       300*250
