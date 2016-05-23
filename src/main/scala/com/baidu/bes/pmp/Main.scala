@@ -9,11 +9,11 @@ import com.baidu.bes.pmp.PMPOrderPriceCalc.{SqlOutput, LocalFileWriter, CsvOutpu
 object Main extends App {
 
   val tuStatFilePath = "/Users/baidu/work/bes_pd_auto_cpm/tu_stat_month"
-  val ordersFilePath = "/Users/baidu/work/bes_pd_auto_cpm/offline_orders"
+  val ordersFilePath = "/Users/baidu/work/bes_pd_auto_cpm/orders"
   //val output = CsvOutput(SysOutConsoleWriter)
   //val output = CsvOutput(LoggerWriter)
   //val output = CsvOutput(LocalFileWriter("/Users/baidu/work/results.csv"))
-  val output = SqlOutput(LocalFileWriter("/Users/baidu/work/bes_pd_auto_cpm/offline_orders.sql"))
+  val output = SqlOutput(LocalFileWriter("/Users/baidu/work/bes_pd_auto_cpm/orders.sql"))
   PMPOrderPriceCalc.execute(tuStatFilePath, ordersFilePath, output)
 
 }

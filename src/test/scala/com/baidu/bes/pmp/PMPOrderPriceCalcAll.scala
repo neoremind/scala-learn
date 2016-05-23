@@ -22,8 +22,8 @@ class PMPOrderPriceCalcAll extends FlatSpec with MockFactory {
       val fields = s.split("\t")
       val domain = fields(2)
       val sizeId = fields(8).getSizeBitMask
-      PDOrder(1, "PD", "xxx.com", domain, 0, sizeId, 0, "DSP") //计算domain+size
-      //PDOrder(1, "PD", "xxx.com", domain, 0, 0, 0, "DSP") //计算domain
+      //PDOrder(1, "PD", "xxx.com", domain, 0, sizeId, 0, "DSP") //计算domain+size
+      PDOrder(1, "PD", "xxx.com", domain, 0, 0, 0, "DSP") //计算domain
     }).distinct
 
     println("Start to calculate " + orders.size + " orders")
