@@ -418,8 +418,8 @@ object PMPOrderPriceCalc {
       logger.info("Sql output begin...")
       val f = (c: CalcResult) => {
         if (!c.isFail && !isNeedAudit(c)) {
-          "update one_main.pmp_pre_order set order_price = %8.2f, pre_state=%d where order_id = '%s';".format(c
-            .premiumCpm / 100.0, OrderStateDefine.DSP_NEED_CONFIRM, c.orderId)
+          "update one_main.pmp_pre_order set order_price = %8.2f, pre_state=%d, mod_time='%s' where order_id = '%s';"
+            .format(c.premiumCpm / 100.0, OrderStateDefine.DSP_NEED_CONFIRM, c.orderId, currDate)
         } else if (!c.isFail && isNeedAudit(c)) {
           ("insert into one_main.pmp_pre_order_audit(order_id,ssp_name,ssp_url,traffic_type,ad_size,advice_price," +
             "adjusted_price,average_price,channel_highest_price,highest_price_channel,highest_price_pv," +
@@ -428,7 +428,7 @@ object PMPOrderPriceCalc {
               c.originalAllCpm / 100.0, c.byDspIdMaxCpm / 100.0, c.maxCpmDspId, c.maxCpmDspImpression,
               currDate, currDate)
         } else if (c.isFail) {
-          "update one_main.pmp_pre_order set pre_state=%d where order_id = '%s';".format(OrderStateDefine.NOT_FOR_BUYING, c.orderId)
+          "update one_main.pmp_pre_order set pre_state=%d, mod_time='%s' where order_id = '%s';".format(OrderStateDefine.NOT_FOR_BUYING, c.orderId)
         } else {
           ""
         }
