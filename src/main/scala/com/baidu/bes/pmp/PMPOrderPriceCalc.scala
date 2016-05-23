@@ -1,6 +1,6 @@
 package com.baidu.bes.pmp
 
-import java.io.{File, FileWriter}
+import java.io._
 import java.util.Date
 
 import org.slf4j.LoggerFactory
@@ -438,7 +438,7 @@ object PMPOrderPriceCalc {
 
   case class LocalFileWriter(filePath: String) extends Writer {
     override def write[V](s: Seq[V], f: V => String, header: String = "") = {
-      val writer = new FileWriter(new File(filePath), true)
+      val writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath, true), "UTF-8"));
       if (!"".equals(header)) {
         writer.write(header + "\n")
       }
