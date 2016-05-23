@@ -85,7 +85,7 @@ object PMPOrderPriceCalc {
         case e: Throwable => {
           val msg = o + "\t" + e.getMessage
           logger.error(msg)
-          newCalcResult(o.orderId, o.domainName, o.domain, o.creativeStyles, o.sizeId).isFail(true).msg(msg)
+          newCalcResult(o.orderId, o.domainName, o.domain, TrafficTypeDefine.WEB, o.sizeId).isFail(true).msg(msg)
         }
       } finally {
         num = num + 1
@@ -187,7 +187,7 @@ object PMPOrderPriceCalc {
     // 返回计算结果
     var premiumCpm = (top25TuStatCpm * premiumCoefficient).toLong
     if (premiumCpm < 100) premiumCpm = 100
-    CalcResult(order.orderId, order.domainName, order.domain, order.creativeStyles, order.sizeId,
+    CalcResult(order.orderId, order.domainName, order.domain, TrafficTypeDefine.WEB, order.sizeId,
       premiumCpm,
       originalTuStatCpm, byDspIdMaxCpmTuStat._2.cpm, byDspIdMaxCpmTuStat._1,
       DspIdDefine.getLiteral(byDspIdMaxCpmTuStat._1),
@@ -346,7 +346,7 @@ object PMPOrderPriceCalc {
    * @param orderId 订单id，字符串，例如BesPreOrder-1446006566-8204或者PDBS-1446121836-8703
    * @param domainName 主域，例如：百度
    * @param domain 主域，例如：baidu.com
-   * @param creativeStyles: 创意类型
+   * @param creativeStyles: 创意类型  //暂时无用
    * @param sizeId 尺寸，经过计算后转为整型的
    * @param dspId dsp id
    * @param dspName dsp名称
@@ -469,7 +469,7 @@ object PMPOrderPriceCalc {
 
   /** 分DSP渠道 */
   object DspIdDefine {
-    private val innerMap = Map((1, "NOVA"),
+    val innerMap = Map((1, "NOVA"),
       (4, "LU"),
       (5, "PC-DSP"),
       (6, "MDSP"),
@@ -482,7 +482,7 @@ object PMPOrderPriceCalc {
 
   /** 资源类型 */
   object ResTypeDefine {
-    private val innerMap = Map((1, "PC"),
+    val innerMap = Map((1, "PC"),
       (2, "WAP"),
       (3, "APP"),
       (4, "PC贴片"),
@@ -493,5 +493,19 @@ object PMPOrderPriceCalc {
       innerMap.getOrElse(resType, "-")
     }
   }
+
+  /** 流量类型 */
+  object TrafficTypeDefine {
+    val WEB = 1;
+    val APP = 2;
+
+    val innerMap = Map((WEB, "WEB"),
+      (APP, "APP"))
+
+    def getLiteral(trafficType: Int): String = {
+      innerMap.getOrElse(trafficType, "-")
+    }
+  }
+
 
 }
