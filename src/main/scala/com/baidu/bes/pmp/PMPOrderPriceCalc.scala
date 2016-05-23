@@ -418,7 +418,7 @@ object PMPOrderPriceCalc {
       logger.info("Sql output begin...")
       val f = (c: CalcResult) => {
         if (!c.isFail && !isNeedAudit(c)) {
-          "update pmp_pre_order set order_price = %8.2f where order_id = '%s';".format(c.premiumCpm / 100.0, c.orderId)
+          "update pmp_pre_order set order_price = %8.2f, pre_state=%d where order_id = '%s';".format(c.premiumCpm / 100.0, OrderStateDefine.DSP_NEED_CONFIRM, c.orderId)
         } else if (!c.isFail && isNeedAudit(c)) {
           ("insert into pmp_pre_order_audit(order_id,ssp_name,ssp_url,traffic_type,ad_size,advice_price," +
             "adjusted_price,average_price,channel_highest_price,highest_price_channel,highest_price_pv," +
@@ -426,11 +426,13 @@ object PMPOrderPriceCalc {
             .format(c.orderId, c.domainName, c.domain, c.trafficType, c.sizeId, c.premiumCpm / 100.0,
               c.originalAllCpm / 100.0, c.byDspIdMaxCpm / 100.0, c.maxCpmDspId, c.maxCpmDspImpression,
               currDate, currDate)
+        } else if (c.isFail) {
+          "update pmp_pre_order set pre_state=%d where order_id = '%s';".format(OrderStateDefine.NOT_FOR_BUYING, c.orderId)
         } else {
           ""
         }
       }
-      writer.write(s.filter(!_.isFail), f)
+      writer.write(s, f)
       logger.info("Sql output end")
     }
   }
@@ -526,5 +528,14 @@ object PMPOrderPriceCalc {
     }
   }
 
+  /** 订单状态 */
+  object OrderStateDefine {
+    //新建订单状态
+    val NEW = 0;
+    //待DSP确认，一般是本程序计算完OK的状态
+    val DSP_NEED_CONFIRM = 6;
+    //无法预订
+    val NOT_FOR_BUYING = 7;
+  }
 
 }
