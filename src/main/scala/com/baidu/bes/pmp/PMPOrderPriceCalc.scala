@@ -25,7 +25,19 @@ object PMPOrderPriceCalc {
   /** 单价异常的范围，指溢价后的单价和最大CPM单价渠道的比值 */
   val auditThreshold = (3.0, 1.0)
 
-  def execute(tuStatFile: String, ordersFile: String, output: Output): (List[CalcResult], List[CalcResult], List[CalcResult]) = {
+  /** 文件的编码 */
+  val fileEncoding = "GBK"
+
+  /**
+   * 计算订单价格
+   * @param tuStatFile tu数据文件
+   * @param ordersFile 订单文件
+   * @param output 输出，可以是sql或者csv文件，或者是日志，利用桥接模式的Output+writer组合
+   * @param msgOutput 信息的输出
+   * @return (成功订单，失败订单，待审订单)
+   */
+  def execute(tuStatFile: String, ordersFile: String, output: Output, msgOutput: Output = null):
+  (List[CalcResult], List[CalcResult], List[CalcResult]) = {
     // 文件格式：7       9223372032562353936     caoliu1.com     0       247     12      194     1       300*250
     val tuStats = FileReader(tuStatFile).fromFile((s: String) => {
       val fields = s.split("\t")
@@ -57,6 +69,13 @@ object PMPOrderPriceCalc {
     output.output(res._1, "Output success results, num=" + res._1.size)
     output.output(res._2, "Output fail results, num=" + res._2.size)
     output.output(res._3, "Output audit results, num=" + res._3.size)
+
+    if (msgOutput != null) {
+      msgOutput.output(res._1, "Successful PD order num is " + res._1.size)
+      msgOutput.output(res._3, "Auditable PD order num is " + res._3.size)
+      msgOutput.output(res._2, "Failed to cacludate PD order num is " + res._2.size)
+    }
+
     res
   }
 
@@ -380,7 +399,7 @@ object PMPOrderPriceCalc {
 
   case class FileReader(filePath: String) {
     def fromFile[V](f: String => V, c: V => Boolean): List[V] = {
-      Source.fromFile(filePath, "UTF-8").getLines().map(f).filter(c).toList
+      Source.fromFile(filePath, fileEncoding).getLines().map(f).filter(c).toList
     }
 
     def fromFile[V](f: String => V): List[V] = {
@@ -421,9 +440,9 @@ object PMPOrderPriceCalc {
       logger.info("Csv output begin...")
       val f = (c: CalcResult) => {
         if (c.isFail) {
-          Array(c.domain, c.sizeId, c.msg).mkString("\t")
+          Array(c.orderId, c.domain, c.sizeId, c.msg).mkString("\t")
         } else {
-          Array(c.domain, c.sizeId, c.premiumCpm, c.originalAllCpm, c.byDspIdMaxCpm,
+          Array(c.orderId, c.domain, c.sizeId, c.premiumCpm, c.originalAllCpm, c.byDspIdMaxCpm,
             c.maxCpmDspId, c.maxCpmDspIdName, c.maxCpmDspImpression).mkString("\t")
         }
       }
@@ -438,7 +457,7 @@ object PMPOrderPriceCalc {
 
   case class LocalFileWriter(filePath: String) extends Writer {
     override def write[V](s: Seq[V], f: V => String, header: String = "") = {
-      val writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath, true), "UTF-8"));
+      val writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath, true), fileEncoding));
       if (!"".equals(header)) {
         writer.write(header + "\n")
       }

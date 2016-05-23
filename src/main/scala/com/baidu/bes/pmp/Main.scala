@@ -17,3 +17,13 @@ object Main extends App {
   PMPOrderPriceCalc.execute(tuStatFilePath, ordersFilePath, output)
 
 }
+
+//object Main extends App {
+//
+//  val tuStatFilePath = args(0)
+//  val ordersFilePath = args(1)
+//  val output = SqlOutput(LocalFileWriter(args(2)))
+//  val msgOutput = CsvOutput(LocalFileWriter(args(3)))
+//  PMPOrderPriceCalc.execute(tuStatFilePath, ordersFilePath, output, msgOutput)
+//
+//}
