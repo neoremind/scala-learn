@@ -50,4 +50,12 @@ class PMPOrderPriceCalcAll extends FlatSpec with MockFactory {
     PMPOrderPriceCalc.execute(tuStatFile, onlineOrderFile, CsvOutput(LocalFileWriter(csvFile)))
   }
 
+  "PMPOrderPriceCalc" should "calculate baixing order" in {
+    val tuStatFile = "/Users/baidu/work/bes_pd_auto_cpm/tu_stat_month"
+    val onlineOrderFile = "/Users/baidu/work/bes_pd_auto_cpm/baixing_order"
+    val csvFile = "/Users/baidu/work/bes_pd_auto_cpm/baixing_order_results.csv"
+
+    PMPOrderPriceCalc.execute(tuStatFile, onlineOrderFile, CsvOutput(LocalFileWriter(csvFile)))
+  }
+
 }

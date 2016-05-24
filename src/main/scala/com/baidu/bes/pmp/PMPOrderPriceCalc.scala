@@ -104,7 +104,7 @@ object PMPOrderPriceCalc {
         case e: Throwable => {
           val msg = o + "\t" + e.getMessage
           logger.error(msg)
-          newCalcResult(o.orderId, o.domainName, o.domain, TrafficTypeDefine.WEB, o.sizeId).isFail(true).msg(msg)
+          newCalcResult(o.orderKeyIndex, o.orderId, o.domainName, o.domain, TrafficTypeDefine.WEB, o.sizeId).isFail(true).msg(msg)
         }
       } finally {
         num = num + 1
@@ -164,7 +164,7 @@ object PMPOrderPriceCalc {
 
     // 根据上一步的聚合结果mergedTuStat计算出展现的impressionPercentage(25%)分位值
     var top25PercImp = mergedTuStat.impression * impressionPercentage
-    logger.info("25% impression=" + top25PercImp)
+    logger.info("25% impression=" + top25PercImp.toLong)
 
     // 分渠道最高CPM的tu stat，这里使用主域，不加入尺寸
     val byDspIdTuStatList = domain2TuStatCache(toConcatString(order.domain)).groupBy(_.dspId).mapValues(t => t.foldLeft(newTuStat)(_.merge(_)))
@@ -188,6 +188,7 @@ object PMPOrderPriceCalc {
       }
     }
     val topTuStatList = tuStatList.takeWhile(takeCondition)
+    logger.debug("original top 25% imp tu stat num=" + topTuStatList.size)
     logger.debug("original top 25% imp tu stat=" + topTuStatList)
     val perc = top25PercImp / topTuStatList.last.impression //计算截断的百分比
     logger.debug("cut percentage=" + perc)
@@ -206,9 +207,8 @@ object PMPOrderPriceCalc {
     // 返回计算结果
     var premiumCpm = (top25TuStatCpm * premiumCoefficient).toLong
     if (premiumCpm < 100) premiumCpm = 100
-    CalcResult(order.orderId, order.domainName, order.domain, TrafficTypeDefine.WEB, order.sizeId,
-      premiumCpm,
-      originalTuStatCpm, byDspIdMaxCpmTuStat._2.cpm, byDspIdMaxCpmTuStat._1,
+    CalcResult(order.orderKeyIndex, order.orderId, order.domainName, order.domain, TrafficTypeDefine.WEB, order.sizeId,
+      premiumCpm, originalTuStatCpm, byDspIdMaxCpmTuStat._2.cpm, byDspIdMaxCpmTuStat._1,
       DspIdDefine.getLiteral(byDspIdMaxCpmTuStat._1),
       byDspIdMaxCpmTuStat._2.impression, isCpmLessThan100 = premiumCpm < 100)
   }
@@ -223,19 +223,22 @@ object PMPOrderPriceCalc {
     TuStat("-", 0, 0, 0L, 0L, 0L, 0L)
   }
 
-  def newCalcResult(orderId: String, domainName: String, domain: String, trafficType: Int, sizeId: Long): CalcResult = {
-    CalcResult(orderId, domainName, domain, trafficType, sizeId, 0L, 0L, 0L, 0, "-", 0L)
+  def newCalcResult(preOrderId: Long, orderId: String, domainName: String, domain: String, trafficType: Int, sizeId: Long): CalcResult = {
+    CalcResult(preOrderId, orderId, domainName, domain, trafficType, sizeId, 0L, 0L, 0L, 0, "-", 0L)
   }
 
   implicit class getSizeId(s: String) {
     def getSizeBitMask = {
-      try {
-        val widthAndHeight = s.split("\\*")
-        widthAndHeight(1).toLong << 32 | widthAndHeight(0).toLong
-      } catch {
-        case e: Exception => {
-          logger.error(e.getMessage, e)
-          0L
+      s match {
+        case "0" => 0L
+        case _ => try {
+          val widthAndHeight = s.split("\\*")
+          widthAndHeight(1).toLong << 32 | widthAndHeight(0).toLong
+        } catch {
+          case e: Exception => {
+            logger.warn(e.getMessage)
+            0L
+          }
         }
       }
     }
@@ -255,6 +258,7 @@ object PMPOrderPriceCalc {
 
   /**
    * 计算结果
+   * @param preOrderId 所谓的整型的自增主键
    * @param orderId 订单id
    * @param domainName 主域名称
    * @param domain 主域
@@ -270,7 +274,8 @@ object PMPOrderPriceCalc {
    * @param isFail 是否计算失败
    * @param msg 计算失败的原因
    */
-  case class CalcResult(orderId: String,
+  case class CalcResult(preOrderId: Long,
+                        orderId: String,
                         domainName: String,
                         domain: String,
                         trafficType: Int,
@@ -421,12 +426,12 @@ object PMPOrderPriceCalc {
           "update one_main.pmp_pre_order set order_price = %8.2f, pre_state=%d, mod_time='%s' where order_id = '%s';"
             .format(c.premiumCpm / 100.0, OrderStateDefine.DSP_NEED_CONFIRM, currDate, c.orderId)
         } else if (!c.isFail && isNeedAudit(c)) {
-          ("insert into one_main.pmp_pre_order_audit(order_id,ssp_name,ssp_url,traffic_type,ad_size,advice_price," +
-            "adjusted_price,average_price,channel_highest_price,highest_price_channel,highest_price_pv," +
-            "audit_status,add_time,mod_time) values('%s','%s','%s',%d,%s,%8.2f,0.0,%8.2f,%8.2f,%d,%s,0,'%s','%s');")
-            .format(c.orderId, c.domainName, c.domain, c.trafficType, c.sizeId, c.premiumCpm / 100.0,
-              c.originalAllCpm / 100.0, c.byDspIdMaxCpm / 100.0, c.maxCpmDspId, c.maxCpmDspImpression,
-              currDate, currDate)
+          // 注意insert ignore 如果存在了审核订单则不更新，不能使用replace into，因为audit status可能不为0
+          ("insert ignore into one_main.pmp_pre_order_audit(pre_order_id,order_id,ssp_name,ssp_url,traffic_type," +
+            "ad_size,advice_price,adjusted_price,average_price,channel_highest_price,highest_price_channel,highest_price_pv," +
+            "audit_status,add_time,mod_time) values(%d, '%s','%s','%s',%d,%s,%8.2f,0.0,%8.2f,%8.2f,%d,%s,0,'%s','%s');")
+            .format(c.preOrderId, c.orderId, c.domainName, c.domain, c.trafficType, c.sizeId, c.premiumCpm / 100.0,
+              c.originalAllCpm / 100.0, c.byDspIdMaxCpm / 100.0, c.maxCpmDspId, c.maxCpmDspImpression, currDate, currDate)
         } else if (c.isFail) {
           "update one_main.pmp_pre_order set pre_state=%d, mod_time='%s' where order_id = '%s';".format(OrderStateDefine.NOT_FOR_BUYING, currDate, c.orderId)
         } else {
@@ -443,9 +448,9 @@ object PMPOrderPriceCalc {
       logger.info("Csv output begin...")
       val f = (c: CalcResult) => {
         if (c.isFail) {
-          Array(c.orderId, c.domain, c.sizeId, c.msg).mkString("\t")
+          Array(c.preOrderId, c.orderId, c.domain, c.sizeId, c.msg).mkString("\t")
         } else {
-          Array(c.orderId, c.domain, c.sizeId, c.premiumCpm, c.originalAllCpm, c.byDspIdMaxCpm,
+          Array(c.preOrderId, c.orderId, c.domain, c.sizeId, c.premiumCpm, c.originalAllCpm, c.byDspIdMaxCpm,
             c.maxCpmDspId, c.maxCpmDspIdName, c.maxCpmDspImpression).mkString("\t")
         }
       }
