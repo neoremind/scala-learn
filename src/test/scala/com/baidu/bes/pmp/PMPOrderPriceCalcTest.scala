@@ -19,9 +19,9 @@ class PMPOrderPriceCalcTest extends FlatSpec {
     succRes(0).sizeId should equal(257698038720L)
     succRes(0).premiumCpm should equal(265)
     succRes(0).originalAllCpm should equal(110)
-    succRes(0).byDspIdMaxCpm should equal(204)
+    succRes(0).byDspIdMaxCpm should equal(205)
     succRes(0).maxCpmDspIdName should equal("NOVA")
-    succRes(0).maxCpmDspImpression should equal(81650)
+    succRes(0).maxCpmDspImpression should equal(81651)
     succRes(0).isFail should equal(false)
     results._2 should have size 0
     results._3 should have size 0
@@ -39,7 +39,7 @@ class PMPOrderPriceCalcTest extends FlatSpec {
     auditRes(0).originalAllCpm should equal(3000)
     auditRes(0).byDspIdMaxCpm should equal(1458)
     auditRes(0).maxCpmDspIdName should equal("NOVA")
-    auditRes(0).maxCpmDspImpression should equal(2081650)
+    auditRes(0).maxCpmDspImpression should equal(2081651)
     auditRes(0).isFail should equal(false)
     results._1 should have size 0
     results._2 should have size 0

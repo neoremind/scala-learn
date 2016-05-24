@@ -49,7 +49,7 @@ object PMPOrderPriceCalc {
       val resType = fields(7).toInt
       val sizeId = fields(8).getSizeBitMask
       TuStat(domain, dspId, resType, sizeId, imp, clk, cost)
-    }, (c: TuStat) => c.impression > 0 && c.impression > c.clk)
+    }, (c: TuStat) => c.impression > 0 && c.impression >= c.clk)
 
     // 文件格式：pre_order_id    order_id        ssp_name        ssp_url creative_styles adsize  dsp_id  dsp_name
     val orders = FileReader(ordersFile).fromFile((s: String) => {
