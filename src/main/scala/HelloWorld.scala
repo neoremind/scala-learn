@@ -18,17 +18,20 @@ object HelloWorld {
     val height = 2147483648600L >> 32
     println(width + "\t" + height)
     println("300*250".getSizeBitMask)
+    println("0".getSizeBitMask)
   }
 
-  implicit class get(s: String) {
+  implicit class getSizeId(s: String) {
     def getSizeBitMask = {
-      try {
-        val widthAndHeight = s.split("\\*")
-        widthAndHeight(1).toLong << 32 | widthAndHeight(0).toLong
-      } catch {
-        case e: Exception => {
-          e.printStackTrace()
-          0L
+      s match {
+        case "0" => 0L
+        case _ => try {
+          val widthAndHeight = s.split("\\*")
+          widthAndHeight(1).toLong << 32 | widthAndHeight(0).toLong
+        } catch {
+          case e: Exception => {
+            0L
+          }
         }
       }
     }

@@ -1,7 +1,7 @@
 /**
  * @author zhangxu
  */
-object Test {
+object PatternMatchingTest {
 
   def main(args: Array[String]) {
     println(matchTest("two"))
