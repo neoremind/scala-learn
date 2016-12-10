@@ -2,7 +2,7 @@ name := "scala-learn"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 //resolvers +=
 //  "Sonatype OSS Snapshots" at "http://maven.scm.baidu.com:8081/nexus/content/groups/public"
@@ -17,7 +17,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" % "scalatest_2.11" % "2.2.6" % "test",
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
   "org.slf4j" % "slf4j-log4j12" % "1.6.0",
-  "org.apache.spark" %% "spark-core" % "1.6.1"
+  "org.apache.spark" %% "spark-core" % "2.0.2",
+  "org.apache.spark" %% "spark-streaming" % "2.0.2"
   //  "net.databinder" %% "dispatch-http" % "0.8.5",
   //  "net.databinder" %% "dispatch-lift-json" % "0.8.5",
   //  "com.baidu.ub.msoa.stub" % "101001.mediaService" % "2016032300-SNAPSHOT",

@@ -2,6 +2,10 @@ package spark
 
 import org.apache.spark.{Partitioner, SparkConf, SparkContext}
 
+/**
+  * Command to launch:
+  * `./bin/spark-submit --class spark.ReportLog     --master yarn     --deploy-mode cluster     --driver-memory 4g     --executor-memory 2g     --executor-cores 1      myjar/scala-learn_2.11-1.0.jar     /reportlog/reportlogs.raw.1000 /reportlog/reportlog.1000.res`
+  */
 object ReportLog {
 
   def main(args: Array[String]) {

@@ -21,7 +21,7 @@ object MakeLog {
   }
 
   def testWriteFile(): Unit = {
-    val writer = new PrintWriter(new File("/Users/baidu/reportlogs.txt"))
+    val writer = new PrintWriter(new File("/Users/helechen/data/reportlogs.raw.1000"))
     for (i <- 1 to 10) {
       val logs = genShuffledLogs(1000 * 1000)
       logs.foreach(writer.println(_))
