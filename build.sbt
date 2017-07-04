@@ -18,7 +18,9 @@ libraryDependencies ++= Seq(
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
   "org.slf4j" % "slf4j-log4j12" % "1.6.0",
   "org.apache.spark" %% "spark-core" % "2.0.2",
-  "org.apache.spark" %% "spark-streaming" % "2.0.2"
+  "org.apache.spark" %% "spark-streaming" % "2.0.2",
+  "org.apache.spark" %% "spark-hive" % "2.0.2",
+  "com.jsuereth" %% "scala-arm" % "2.0"
   //  "net.databinder" %% "dispatch-http" % "0.8.5",
   //  "net.databinder" %% "dispatch-lift-json" % "0.8.5",
   //  "com.baidu.ub.msoa.stub" % "101001.mediaService" % "2016032300-SNAPSHOT",
