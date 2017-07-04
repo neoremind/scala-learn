@@ -29,6 +29,20 @@ object PatternMatchingTest {
     } yield name
 
     println(hallOfFame)
+
+    ///////////
+
+    case class Person(name: String, age: Int)
+    def xu(): Person = Person("xu", 30)
+
+    val Person(_, age) = xu()
+    println(s"He is $age years old!")
+
+    type Person2 = (String, Int)
+    def xu2(): Person2 = ("xu", 40)
+
+    val (name1, age1) = xu2()
+    println(s"$name1 is $age1 years old!")
   }
 
   /**

@@ -22,7 +22,7 @@ object PartialFunctionTest extends App {
   }
 
   println(Try(numbers.map(pf))) // will throw a MatchError: (two,2) (of class scala.Tuple2)
-  println(numbers.collect(pf))
+  println(numbers.collect(pf)) // skip not match
   println(numbers.collect(pfWithOrElse))
 
   //等价于
