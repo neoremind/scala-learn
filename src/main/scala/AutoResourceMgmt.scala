@@ -65,7 +65,7 @@ object AutoResourceMgmt extends App {
   /////////////////////
   // 有返回值的
 
-  def using2[T <: {def close()}](resource: T)(block: T => Int) = {
+  def using2[T <: {def close()}, X](resource: T)(block: T => X) = {
     try {
       block(resource)
     } finally {
