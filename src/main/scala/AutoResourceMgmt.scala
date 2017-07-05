@@ -62,4 +62,24 @@ object AutoResourceMgmt extends App {
     println(count)
   }
 
+  /////////////////////
+  // 有返回值的
+
+  def using2[T <: {def close()}](resource: T)(block: T => Int) = {
+    try {
+      block(resource)
+    } finally {
+      if (resource != null) resource.close()
+    }
+  }
+
+  val count = using2(new BufferedReader(new FileReader("test.txt"))) { r =>
+    var count = 0
+    while (r.readLine != null) count += 1
+    //    println(count)
+    count
+  }
+
+  println(count)
+
 }
