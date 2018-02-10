@@ -17,12 +17,12 @@ object MakeLog {
   def main(args: Array[String]) {
     testWriteFile()
 
-    testMapReduce()
+    //testMapReduce()
   }
 
   def testWriteFile(): Unit = {
-    val writer = new PrintWriter(new File("/Users/helechen/data/reportlogs.raw.1000"))
-    for (i <- 1 to 10) {
+    val writer = new PrintWriter(new File("/Users/xu.zhang/data/pblog/reportlogs.raw.100.1000"))
+    for (i <- 1 to 100) {
       val logs = genShuffledLogs(1000 * 1000)
       logs.foreach(writer.println(_))
     }

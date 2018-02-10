@@ -4,7 +4,17 @@ import org.apache.spark.{Partitioner, SparkConf, SparkContext}
 
 /**
   * Command to launch:
-  * `./bin/spark-submit --class spark.ReportLog     --master yarn     --deploy-mode cluster     --driver-memory 4g     --executor-memory 2g     --executor-cores 1      myjar/scala-learn_2.11-1.0.jar     /reportlog/reportlogs.raw.1000 /reportlog/reportlog.1000.res`
+  * ```
+  * bin/spark-submit --class spark.ReportLog \
+  * --master yarn \
+  * --deploy-mode cluster \
+  * --driver-memory 1g  \
+  * --executor-memory 1g  \
+  * --executor-cores 1  \
+  * /Users/xu.zhang/IdeaProjects/scala-learn/target/scala-2.11/scala-learn_2.11-1.0.jar \
+  * /reportlogs/reportlogs.raw.10.1000  \
+  * /reportlogs/res/20171004
+  * ```
   */
 object ReportLog {
 
