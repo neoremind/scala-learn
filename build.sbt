@@ -20,6 +20,7 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % "2.2.1",
   "org.apache.spark" %% "spark-streaming" % "2.2.1",
   "org.apache.spark" %% "spark-hive" % "2.2.1",
+  "org.apache.spark" %% "spark-mllib" % "2.2.1",
   "com.jsuereth" %% "scala-arm" % "2.0"
   //  "net.databinder" %% "dispatch-http" % "0.8.5",
   //  "net.databinder" %% "dispatch-lift-json" % "0.8.5",
