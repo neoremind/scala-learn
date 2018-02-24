@@ -24,6 +24,8 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 /**
   * http://spark.apache.org/docs/latest/ml-classification-regression.html#logistic-regression
   *
+  * https://www.cnblogs.com/wwxbi/p/6224670.html
+  *
   * ```
   * bin/spark-submit --class spark.ml.LogisticRegressionDemo \
   * --master yarn \
